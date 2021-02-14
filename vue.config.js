@@ -6,5 +6,5 @@ module.exports = {
   publicPath: process.env.NODE_ENV === 'production' ? '/tasks/' : '/',
   devServer: {
     proxy: 'http://encobao.com'
-  }  
+  }
 }

@@ -1,69 +1,94 @@
 <template>
   <v-app>
+    <!-- <wf-tabs-header 
+      :users="users" 
+      @change-user="userId = $event"
+    ></wf-tabs-header> -->
     <v-app-bar
       app
-      color="white"
-      class="px-md-16"
+      color="primary"
+      absolute
+      dark
     >
 
-      <v-avatar
-        color="grey darken-1"
-        size="32"
-      ></v-avatar>
+      <span
+        class="text-h5 font-weight-bold"
+        @click="refresh"
+      >
+      TASKS
+      </span>
 
       <v-spacer></v-spacer>
 
-      <div style="width: 148px;" class="pt-4">
+      <div style="width: 148px;">
         <v-select
           v-model="userId"
           :items="users"
           item-text="name"
           item-value="id"
-          single-line
-          color="grey darken-1"
-          item-color="grey darken-1"
-        ></v-select>
+          class="pt-8"
+          background-color="primary"
+          solo
+          flat
+        >
+          <template v-slot:item="props">
+            <span class="black--text">
+              {{ props.item.name }}
+            </span>
+          </template>
+
+          <template v-slot:selection="props">
+            <span class="font-weight-bold">
+              {{ props.item.name }}
+            </span>
+          </template>
+        </v-select>
       </div>
 
-      <template v-slot:extension>
-        <v-tabs
-          v-model="tab"
-          centered
-          class="ml-n9"
-          color="grey darken-1"
-          icons-and-text
-        >
-          <v-tab key=-1>All</v-tab>
-          <v-tab
-            v-for="categ in categories"
-            :key="categ.id"
-          >
-            {{ categ.name }}
-            <v-icon :color="categ.color" x-small>mdi-card</v-icon>
-          </v-tab>
-        </v-tabs>
-      </template>
-
     </v-app-bar>
-
-    <v-main class="grey lighten-3">
-      <v-container>
-        <v-row>
-          <v-col
-            class="mx-auto"
-            cols="12"
-            sm="8"
-          >
+    
+    <v-main>
             <v-sheet
-              min-height="70vh"
-              rounded="lg"
+              class="mx-auto"
+              min-height="80vh"
+              :max-width="appWidth"
             >
               <!-------------------------------------------------------------->
               <!-- Main content ---------------------------------------------->
               <!-------------------------------------------------------------->
+              <v-tabs
+                v-model="tabs"
+                centered
+                color="grey darken-1"
+                icons-and-text
+              >
+                <v-tab key=-1>
+                  All
+                  <v-icon color="white" x-small>mdi-card</v-icon>
+                </v-tab>
+                <v-tab
+                  v-for="categ in categories"
+                  :key="categ.id"
+                >
+                  {{ categ.name }}
+                  <v-icon :color="categ.color" x-small>mdi-checkbox-blank-circle</v-icon>
+                </v-tab>
+              </v-tabs>
+              
+              <v-alert
+                v-if="apiErrored"
+                border="right"
+                colored-border
+                type="error"
+                elevation="2"
+                class="ma-6"
+              >
+                We're sorry, we're not able to retrieve this information at the moment, please try back later
+              </v-alert>
+              
               <v-tabs-items 
-                class="mx-4 py-7"
-                v-model="tab"
+                class="mx-4 py-10"
+                v-model="tabs"
               >
                 <!-------------------------------------------------------------->
                 <!-- ALL Tab ---------------------------------------------->
@@ -114,29 +139,33 @@
               <!-- END Main content ------------------------------------------>
               <!-------------------------------------------------------------->
             </v-sheet>
-          </v-col>
-        </v-row>
-      </v-container>
     </v-main>
     <v-footer 
       app
-      padless      
+      padless
+      dark
       absolute
-      color="white"
     >
-      <v-col
-        class="text-center grey--text text--darken-1"
-        cols="12"
+      <v-card
+        width="100%"
+        flat
+        tile
       >
-        {{ new Date().getFullYear() }} — <strong>Encobao</strong>
-      </v-col>
+        <v-card-text 
+          class="grey lighten-1 grey--text text--darken-3 text-center"
+        >
+          {{ new Date().getFullYear() }} — <strong>encobao.com</strong>
+        </v-card-text>
+      </v-card>
     </v-footer>
-
+    <!-- <wf-tabs-footer devName="Encobao.com"></wf-tabs-footer> -->
   </v-app>
 </template>
 
 <script>
+  //import WfTabsHeader from './components/WfTabsHeader'
   import Task from './components/Task'
+  //import WfTabsFooter from './components/WfTabsFooter'
   import axios from 'axios'
 
 
@@ -144,93 +173,54 @@
     name: 'App',
     components: {
       Task,
+      //WfTabsFooter,
+      //WfTabsHeader,
     },
     data: () => ({
-      tab: null,
+      appWidth: '800px',
+      tabs: null,
       userId: -1,
-      //users: null,
-      users: [
-        { id: 1, name: 'Daniel' },
-        { id: 2, name: 'Jessica' },
-      ],
-      //categories: null,
-      categories: [
-        {   
-            id: 1, 
-            name: "Sidework", 
-            color: "#b30000", 
-            verify: false 
-        },
-        {   
-            id: 2, 
-            name: "Closing", 
-            color: "#1A237E", 
-            verify: true 
-        },
-      ],
-      tasks: [
-        { 
-          id: 1, 
-          name: 'Soups and Salads',
-          description: 'Refill the soup containers, dressing and toppings for salads during your shift.', 
-          categId: 1,
-          status: 0,
-          userId: 1,
-          users: [ 
-                  { id: 1, name: 'Daniel'},
-                  { id: 2, name: 'Jessica'},
-                  { id: 3, name: 'Pepe'},
-                ], 
-        },
-        { 
-          id: 2, 
-          name: 'Beverage Station',
-          description: 'Refill ice, straws, strawberry lemonade, sweeted and unsweeted tea.', 
-          categId: 1, 
-          status: 0, 
-          userId: 1,
-          users: [ 
-                  { id: 1, name: 'Daniel'},
-                ], 
-        },
-        { 
-          id: 3, 
-          name: 'Station 4',
-          description: 'Clean and restock Station 4.', 
-          categId: 2, 
-          status: 0, 
-          userId: 1,
-          users: [ 
-                  { id: 1, name: 'Daniel'},
-                  { id: 3, name: 'Pepe'},
-                ], 
-        },
-        { 
-          id: 4, 
-          name: 'Detail chairs',
-          description: 'Do a detail cleanning for all chairs in your section.', 
-          categId: 3, 
-          status: 1, 
-          userId: 2,
-          users: [ 
-                  { id: 1, name: 'Daniel'},
-                  { id: 3, name: 'Pepe'},
-                ], 
-        },
-      ],
+      apiErrored: false,
+      users: [],
+      // users: [
+        //   { id: 1, name: 'Daniel' },
+      // ],
+      categories: [],
+      // categories: [
+      //   {   
+      //       id: 1, 
+      //       name: "Sidework", 
+      //       color: "#b30000", 
+      //       verify: false 
+      //   },
+      // ],
+      tasks: [],
+      // tasks: [
+      //   { 
+      //     id: 1, 
+      //     name: 'Soups and Salads',
+      //     description: 'Refill the soup containers, dressing and toppings for salads during your shift.', 
+      //     categId: 1,
+      //     status: 0,
+      //     userId: 1,
+      //     users: [ 
+      //             { id: 1, name: 'Daniel'},
+      //             { id: 2, name: 'Jessica'},
+      //             { id: 3, name: 'Pepe'},
+      //           ], 
+      //   },
+      // ],
       filteredTasks: Array,
     }),
     watch: {
       userId: function(val) {
         function findIndexOnTasks(task) {
-          //return task.userId == val
           return task.users.findIndex( user => user.id == val) != -1
         }
 
         if (val == -1) {
           this.filteredTasks = this.tasks
         } else {
-          //this.filteredTasks = this.tasks.filter( task => task.userId === val )
           this.filteredTasks = this.tasks.filter( findIndexOnTasks )
         }
       },
@@ -240,39 +230,45 @@
         const index = this.tasks.findIndex(task => task.id === taskId)
         this.tasks[index].status = 2
       },
+
+      // onChangeUser(newUserId) {
+      //   this.userId = newUserId
+      // },
+      
+      async getApiObject(apiLocation) {
+        try {
+          const resp = await axios.get(apiLocation)
+          return resp.data
+        } catch(error) {
+            this.apiErrored = true
+        }
+      },
+
+      refresh() {
+        location.reload()
+      },
     },
-    // created: function() {
-    // //   this.users.unshift( {id: -1, name: 'All users'} )
-    //   this.filteredTasks = this.tasks
-    // },
     mounted () {
-      axios
-        .get('api/categories.json')
-        .then(resp => {
-          console.log(resp.data)
-          this.categories = resp.data
-        })
-        // .catch(error => {
-        //   console.log(error)
-        //   this.errored = true
-        // })
-        // .finally(() => this.loading = false)
+      this.getApiObject(process.env.VUE_APP_API_URL + 'categories.json')
+      //this.getApiObject('api/categories.json')
+      //this.getApiObject('http://encobao.com/api/categories.json')
+        .then(data => this.categories = data)
 
-      axios
-        .get('api/users.json')
-        .then(resp => {
-          //console.log(resp.data)
-          this.users = resp.data
+      this.getApiObject(process.env.VUE_APP_API_URL + 'users.json')
+      //this.getApiObject('api/users.json')
+      //this.getApiObject('http://encobao.com/api/users.json')
+        .then(data => {
+          this.users = data
           this.users.unshift( {id: -1, name: 'All users'} )
-          //   this.filteredTasks = this.tasks
         })
-        // .catch(error => {
-        //   console.log(error)
-        //   this.errored = true
-        // })
-        // .finally(() => this.loading = false)
-      this.filteredTasks = this.tasks
-    },
 
+      this.getApiObject(process.env.VUE_APP_API_URL + 'tasks.json')
+      //this.getApiObject('api/tasks.json')
+      //this.getApiObject('http://encobao.com/api/tasks.json')
+        .then(data => {
+          this.tasks = data
+          this.filteredTasks = this.tasks
+        })
+    },
   }
 </script>
